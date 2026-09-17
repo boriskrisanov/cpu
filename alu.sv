@@ -2,7 +2,8 @@ parameter SIZE = 4;
 
 typedef enum {
 	ADD,
-	SUB
+	SUB,
+	NEGATE
 } ALU_FUNCTION;
 
 module alu (
@@ -13,19 +14,28 @@ module alu (
 	output logic[SIZE-1:0] out,
 	output logic overflow
 );
-	case (func) begin
-		ADD:
-			full_adder #(.SIZE(SIZE)) adder(
+	logic adder_out;
+	logic negator_out;
+	logic adder_overflow;
+
+	full_adder #(.SIZE(SIZE)) adder(
 			.a(a),
 			.b(b),
-			.out(out),
-			.overflow(overflow)
+			.out(adder_out),
+			.overflow(adder_overflow)
 			);
-		SUB:
-			tc_negate(
+			
+	tc_negate negator(
 				.in(a),
-				.out(out)
+				.out(negator_out)
 			);
-		default: assign out = 0;
-	endcase
+	
+	always_comb begin
+		case (func)
+			ADD: out = adder_out;
+			SUB: out = 0;
+			NEGATE: out = negator_out;
+			default: out = 0;
+		endcase
+	end
 endmodule
